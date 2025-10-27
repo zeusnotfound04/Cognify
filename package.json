@@ -1,0 +1,26 @@
+{
+  "name": "cognify",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "backend:dev": "turbo run dev --filter=backend",
+    "backend:build": "turbo run build --filter=backend",
+    "backend:db:generate": "turbo run db:generate --filter=backend",
+    "backend:db:push": "turbo run db:push --filter=backend",
+    "backend:db:migrate": "turbo run db:migrate --filter=backend",
+    "backend:db:studio": "turbo run db:studio --filter=backend"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.8",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
