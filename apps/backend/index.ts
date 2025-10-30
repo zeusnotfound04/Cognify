@@ -1,12 +1,25 @@
 import express from "express"
+import cors from "cors"
 import { createUser, getUsers } from "./controllers/usersController";
-import { createMemoryHandler } from "./controllers/memoryController";
+import { createMemoryHandler, fetchUserMemoryHandler, searchMemoryHandler } from "./controllers/memoryController";
 import http from "http"
 import { Server } from "socket.io";
 import { callLLM, generateEmbedding } from "./services/embeddingService";
 import { findSimilarMemories } from "./services/memoryService";
+import authRoutes from "./routes/auth";
+import { requireAuth, optionalAuth, AuthenticatedRequest } from "./middleware/auth";
+import dotenv from "dotenv";
+
+dotenv.config();
 const app = express();
 const PORT = 3001
+
+app.use(cors({
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
@@ -18,7 +31,11 @@ const io = new Server(server, {
     }
 })
 app.set("io", io)
-app.get("/users", async (req, res) => {
+
+// Auth routes
+app.use('/auth', authRoutes);
+
+app.get("/users", requireAuth, async (req, res) => {
     try {
         const users = await getUsers();
         console.log("Got the users:", users);
@@ -29,11 +46,17 @@ app.get("/users", async (req, res) => {
     }
 })
 
-app.post("/memory" , createMemoryHandler)
-app.get("/memory/:id" ,)
+app.post("/memory" , requireAuth, createMemoryHandler)
+app.get("/memory", requireAuth, fetchUserMemoryHandler)
+app.post("/memory/search", requireAuth, searchMemoryHandler)
 
-app.post("/chat" , async (req , res) => {
-    const { userId, query } = req.body;
+app.post("/chat" , requireAuth, async (req: AuthenticatedRequest , res) => {
+    const { query } = req.body;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
     
     console.time("Total chat time");
     

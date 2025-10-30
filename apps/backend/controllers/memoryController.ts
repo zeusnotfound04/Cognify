@@ -1,16 +1,19 @@
 import type { Request  , Response} from "express";
 import { createMemory, searchMemory, getUserMemories } from "../services/memoryService";
+import { AuthenticatedRequest } from "../middleware/auth";
 
-export const createMemoryHandler = async (req : Request , res : Response) => {
+export const createMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
     try{
         console.log("Request body in createMemoryHandler:", req.body);
-        const { userId , content ,  metadata = {} } = req.body;
+        const { content ,  metadata = {} } = req.body;
+        const userId = req.user?.id;
         
-        // Validate required fields
+        // Validate authenticated user
         if (!userId) {
-            return res.status(400).json({ error: "userId is required" });
+            return res.status(401).json({ error: "User not authenticated" });
         }
         
+        // Validate required fields
         if (!content) {
             return res.status(400).json({ error: "content is required" });
         }
@@ -26,9 +29,15 @@ export const createMemoryHandler = async (req : Request , res : Response) => {
     }    
 }  
 
-export const searchMemoryHandler = async (req : Request , res : Response) => {
+export const searchMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
     try{
         const { query } = req.body;
+        const userId = req.user?.id;
+        
+        if (!userId) {
+            return res.status(401).json({ error: "User not authenticated" });
+        }
+        
         const results = await searchMemory(query);
         res.json(results)
     } catch(err : any) {
@@ -37,12 +46,14 @@ export const searchMemoryHandler = async (req : Request , res : Response) => {
     }      
 }            
 
-export const fetchUserMemoryHandler = async (req : Request , res : Response) => {
+export const fetchUserMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
     try{
-         const userId = req.params.id;
-          if (!userId) {
-            return res.status(400).json({ error: "User ID is required" });
+        const userId = req.user?.id;
+        
+        if (!userId) {
+            return res.status(401).json({ error: "User not authenticated" });
         }
+        
         const memories = await getUserMemories(userId);
         res.json(memories)
     } catch ( err : any){
