@@ -7,7 +7,12 @@ import {
   ErrorCode,
   McpError
 } from "@modelcontextprotocol/sdk/types.js";
-import { memoryStoreTool, memoryStoreHandler } from "./tools/index.js";
+import { 
+  memoryStoreTool, 
+  searchContextTool, 
+  storeContextHandler, 
+  searchContextHandler 
+} from "./tools/index.js";
 
 dotenv.config();
 
@@ -21,7 +26,7 @@ const server = new Server({
 });
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: [memoryStoreTool]
+    tools: [memoryStoreTool, searchContextTool]
   };
 });
 
@@ -29,9 +34,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
-    if (name === "memory_store") {
-      const { userId, content } = args as { userId: string; content: string };
-      return await memoryStoreHandler({ userId, content });
+    if (name === "store_context") {
+      const { content, metadata, authToken } = args as { 
+        content: string; 
+        metadata?: any; 
+        authToken: string; 
+      };
+      return await storeContextHandler({ content, metadata, authToken });
+    } else if (name === "search_context") {
+      const { query, authToken, limit } = args as { 
+        query: string; 
+        authToken: string; 
+        limit?: number; 
+      };
+      return await searchContextHandler({ 
+        query, 
+        authToken, 
+        ...(limit !== undefined && { limit }) 
+      });
     } else {
       throw new McpError(
         ErrorCode.MethodNotFound,
