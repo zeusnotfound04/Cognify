@@ -165,3 +165,29 @@ export const logout = async (req: AuthenticatedRequest, res: Response) => {
   // In a production app, you might want to implement token blacklisting
   res.json({ message: 'Logout successful' });
 };
+
+export const verifyToken = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ 
+      valid: true,
+      user,
+      userId: user.id,
+      email: user.email 
+    });
+  } catch (error: any) {
+    console.error('Token verification error:', error);
+    res.status(500).json({ error: 'Token verification failed' });
+  }
+};

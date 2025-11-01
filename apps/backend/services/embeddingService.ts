@@ -30,12 +30,48 @@ export async function generateEmbedding(text:string) : Promise<number[]> {
     return embedding;
 }
 
-export async function callLLM(query:string) {
-    console.log("Calling LLM with query:", query);
-    const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: query,
-    });
-    console.log(response.text);
-    return response.text
+export async function callLLM(query: string, options: {
+    model?: string;
+    maxTokens?: number;
+    temperature?: number;
+} = {}) {
+    const { model = "gemini-2.0-flash-exp", maxTokens, temperature } = options;
+    
+    console.log(`Calling LLM with model: ${model}, query:`, query.substring(0, 100) + "...");
+    
+    // Map frontend model IDs to actual Gemini model names
+    const modelMap: { [key: string]: string } = {
+        'gemini-pro': 'gemini-1.5-pro',
+        'gemini-flash': 'gemini-2.0-flash-exp',
+        'gemini-nano': 'gemini-1.5-flash'
+    };
+    
+    const actualModel = modelMap[model] || model;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: actualModel,
+            contents: query,
+            ...(maxTokens && { maxOutputTokens: maxTokens }),
+            ...(temperature !== undefined && { temperature }),
+            ...(temperature === undefined && { temperature: 0.7 }) // Default temperature
+        });
+        
+        console.log("LLM Response received");
+        return response.text;
+    } catch (error) {
+        console.error("LLM Error:", error);
+        
+        // Fallback to default model if the specified model fails
+        if (actualModel !== "gemini-2.0-flash-exp") {
+            console.log("Falling back to default model...");
+            const fallbackResponse = await ai.models.generateContent({
+                model: "gemini-2.0-flash-exp",
+                contents: query,
+            });
+            return fallbackResponse.text;
+        }
+        
+        throw error;
+    }
 }

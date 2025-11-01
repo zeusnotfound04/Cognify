@@ -17,14 +17,15 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  name      String?
-  username  String?   @unique  
-  memories  Memory[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String?
+  username     String?       @unique  
+  memories     Memory[]
+  integrations Integration[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Memory {
@@ -41,6 +42,27 @@ model Memory {
   updatedAt   DateTime                      @updatedAt
 
   user        User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Integration {
+  id           String    @id @default(uuid())
+  userId       String
+  provider     String    // 'slack', 'notion', 'google-drive', 'google-calendar'
+  accessToken  String
+  refreshToken String?
+  scopes       String?
+  teamId       String?   // For Slack
+  teamName     String?   // For Slack
+  workspaceId  String?   // For Notion
+  workspaceName String?  // For Notion
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
 }
 
 model AgentTrigger {

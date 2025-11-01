@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import { callLLM, generateEmbedding } from "./services/embeddingService";
 import { findSimilarMemories } from "./services/memoryService";
 import authRoutes from "./routes/auth";
+import oauthRoutes from "./routes/oauth";
 import { requireAuth, optionalAuth, AuthenticatedRequest } from "./middleware/auth";
 import { validateMCPService } from "./middleware/mcpAuth";
 import dotenv from "dotenv";
@@ -37,6 +38,9 @@ app.set("io", io)
 // Auth routes
 app.use('/auth', authRoutes);
 
+// OAuth and integration routes
+app.use('/', oauthRoutes);
+
 app.get("/users", requireAuth, async (req, res) => {
     try {
         const users = await getUsers();
@@ -53,44 +57,59 @@ app.get("/memory", validateMCPService, requireAuth, fetchUserMemoryHandler)
 app.post("/memory/search", validateMCPService, requireAuth, searchMemoryHandler)
 
 app.post("/chat" , requireAuth, async (req: AuthenticatedRequest , res) => {
-    const { query } = req.body;
+    const { query, model = 'gemini-pro', useMemoryContext = true, maxTokens, temperature } = req.body;
     const userId = req.user?.id;
     
     if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
     
+    if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: 'Query is required and must be a string' });
+    }
+    
     console.time("Total chat time");
+    const startTime = Date.now();
     
-    console.time("Embedding generation");
-    const queryEmbedding = await generateEmbedding(query);
-    console.timeEnd("Embedding generation");
-    console.log("Query Embedding:", queryEmbedding.slice(0, 5), "...");
+    let context = '';
+    let relatedMemories: any[] = [];
     
-    console.time("Memory search");
-    const relatedMemories = await findSimilarMemories(userId, queryEmbedding, 5);
-    console.timeEnd("Memory search");
-    console.log(`Found ${relatedMemories.length} memories`);
+    if (useMemoryContext) {
+        console.time("Embedding generation");
+        const queryEmbedding = await generateEmbedding(query);
+        console.timeEnd("Embedding generation");
+        console.log("Query Embedding:", queryEmbedding.slice(0, 5), "...");
+        
+        console.time("Memory search");
+        relatedMemories = await findSimilarMemories(userId, queryEmbedding, 5);
+        console.timeEnd("Memory search");
+        console.log(`Found ${relatedMemories.length} memories`);
 
-    const context = relatedMemories
-        .slice(0, 3)
-        .map((m:any) => m.content)
-        .join("\n");
+        context = relatedMemories
+            .slice(0, 3)
+            .map((m:any) => m.content)
+            .join("\n");
+    }
         
     const prompt = context 
-        ? `Context:\n${context}\n\nUser: ${query}\n\nAssistant:`
+        ? `Context from your memories:\n${context}\n\nUser: ${query}\n\nAssistant:`
         : `User: ${query}\n\nAssistant:`;
     
     console.time("LLM call");
-    const answer = await callLLM(prompt);
+    const answer = await callLLM(prompt, { model, maxTokens, temperature });
     console.timeEnd("LLM call");
     console.timeEnd("Total chat time");
+    
+    const endTime = Date.now();
 
     res.json({ 
         answer,
         metadata: {
             memoriesUsed: relatedMemories.length,
-            contextSize: context.length
+            contextSize: context.length,
+            model: model,
+            responseTime: endTime - startTime,
+            useMemoryContext
         }
     });
 
