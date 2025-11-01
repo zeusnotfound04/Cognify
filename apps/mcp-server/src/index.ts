@@ -13,8 +13,13 @@ import {
   storeContextHandler, 
   searchContextHandler 
 } from "./tools/index.js";
+import { logger, handleError } from "./logger.js";
+import { runStartupChecks } from "./database.js";
+import { getConfig } from "./config.js";
 
 dotenv.config();
+
+const config = getConfig();
 
 const server = new Server({
   name: "cognify-mcp",
@@ -34,24 +39,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
+    logger.info(`Tool called: ${name}`, { args });
+
     if (name === "store_context") {
-      const { content, metadata, authToken } = args as { 
+      const { content, metadata, userId } = args as { 
         content: string; 
         metadata?: any; 
-        authToken: string; 
+        userId?: string; 
       };
-      return await storeContextHandler({ content, metadata, authToken });
+      const result = await storeContextHandler({ 
+        content, 
+        metadata, 
+        ...(userId && { userId }) 
+      });
+      logger.info(`Tool ${name} completed successfully`);
+      return result;
     } else if (name === "search_context") {
-      const { query, authToken, limit } = args as { 
+      const { query, userId, limit } = args as { 
         query: string; 
-        authToken: string; 
+        userId?: string; 
         limit?: number; 
       };
-      return await searchContextHandler({ 
+      const result = await searchContextHandler({ 
         query, 
-        authToken, 
+        ...(userId && { userId }),
         ...(limit !== undefined && { limit }) 
       });
+      logger.info(`Tool ${name} completed successfully`);
+      return result;
     } else {
       throw new McpError(
         ErrorCode.MethodNotFound,
@@ -59,23 +74,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       );
     }
   } catch (error) {
+    const errorInfo = handleError(error, `tool:${name}`);
+    logger.error(`Tool ${name} failed`, { error: errorInfo });
+    
     if (error instanceof McpError) {
       throw error;
     }
     throw new McpError(
       ErrorCode.InternalError,
-      `Error executing tool ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      errorInfo.message
     );
   }
 });
 
 async function runServer() {
+  logger.info("Starting Cognify MCP Server...", { 
+    nodeEnv: config.NODE_ENV,
+    backendUrl: config.BACKEND_URL,
+    logLevel: config.LOG_LEVEL
+  });
+  
+  const startupCheck = await runStartupChecks();
+  if (!startupCheck.success) {
+    logger.error("Startup checks failed", { errors: startupCheck.errors });
+    if (config.NODE_ENV === 'production') {
+      logger.error("Exiting due to failed startup checks in production");
+      process.exit(1);
+    }
+    logger.warn("Continuing startup despite failed checks - some functionality may be limited");
+  } else {
+    logger.info("All startup checks passed");
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Cognify MCP Server is running...");
+  logger.info("Cognify MCP Server is running");
 }
 
 runServer().catch((error) => {
-  console.error("Failed to start server:", error);
+  logger.error("Failed to start server", { error: error.message, stack: error.stack });
   process.exit(1);
 });

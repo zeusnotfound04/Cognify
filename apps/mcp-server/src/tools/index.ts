@@ -2,6 +2,7 @@ import axios from "axios";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 const BASE_URL = process.env.BACKEND_URL || "http://localhost:3001";
+const SERVICE_TOKEN = process.env.MCP_SERVICE_TOKEN;
 
 export const memoryStoreTool: Tool = {
   name: "store_context",
@@ -22,12 +23,12 @@ export const memoryStoreTool: Tool = {
           importance: { type: "number" }
         }
       },
-      authToken: {
+      userId: {
         type: "string",
-        description: "JWT authentication token for the user"
+        description: "User ID to associate the memory with (optional, defaults to anonymous)"
       }
     },
-    required: ["content", "authToken"]
+    required: ["content"]
   }
 };
 
@@ -41,9 +42,9 @@ export const searchContextTool: Tool = {
         type: "string",
         description: "The search query to find similar memories/context"
       },
-      authToken: {
-        type: "string", 
-        description: "JWT authentication token for the user"
+      userId: {
+        type: "string",
+        description: "User ID to search memories for (optional, defaults to anonymous)"
       },
       limit: {
         type: "number",
@@ -52,27 +53,32 @@ export const searchContextTool: Tool = {
         maximum: 20
       }
     },
-    required: ["query", "authToken"]
+    required: ["query"]
   }
 };
 
 export const storeContextHandler = async ({ 
   content, 
   metadata = {}, 
-  authToken 
+  userId
 }: { 
   content: string; 
   metadata?: any; 
-  authToken: string; 
+  userId?: string; 
 }) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/memory`, 
-      { content, metadata },
+      { 
+        content, 
+        metadata,
+        userId: userId || 'anonymous'
+      },
       {
         headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${SERVICE_TOKEN}`,
+          'Content-Type': 'application/json',
+          'X-MCP-Service': 'cognify-mcp'
         }
       }
     );
@@ -97,21 +103,26 @@ export const storeContextHandler = async ({
 
 export const searchContextHandler = async ({ 
   query, 
-  authToken, 
+  userId, 
   limit = 5 
 }: { 
   query: string; 
-  authToken: string; 
+  userId?: string; 
   limit?: number; 
 }) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/memory/search`, 
-      { query },
+      { 
+        query,
+        userId: userId || 'anonymous',
+        limit
+      },
       {
         headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${SERVICE_TOKEN}`,
+          'Content-Type': 'application/json',
+          'X-MCP-Service': 'cognify-mcp'
         }
       }
     );

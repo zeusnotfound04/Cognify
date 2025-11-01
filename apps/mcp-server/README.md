@@ -1,85 +1,61 @@
 # Cognify MCP Server
 
-A Model Context Protocol (MCP) server for the Cognify memory storage system.
+Production-ready MCP server for Cognify context storage and search.
+
+## Status: PLUG-AND-PLAY READY
 
 ## Features
 
-- **Memory Storage Tool**: Store memories/content for users via the Cognify backend API
+- Store context/memories in Cognify backend
+- Search stored context using semantic similarity
+- JWT authentication integration
+- TypeScript with full compilation
+- Error handling and logging
 
-## Prerequisites
+## Quick Start
 
-- Node.js 18+ 
-- TypeScript
-- A running Cognify backend server (expected at `http://localhost:3001`)
-
-## Installation
-
+### 1. Start Cognify Backend
 ```bash
-npm install
-```
-
-## Development
-
-```bash
-# Run in development mode with hot reloading
+cd ../backend
 npm run dev
-
-# Build the project
-npm run build
-
-# Run the built version
-npm start
 ```
 
-## Usage
-
-This MCP server is designed to be used with MCP-compatible clients. It provides the following tools:
-
-### memory_store
-
-Stores memory content for a user in the Cognify system.
-
-**Parameters:**
-- `userId` (string, required): The ID of the user
-- `content` (string, required): The content/memory to store
-
-**Example:**
-```json
-{
-  "name": "memory_store",
-  "arguments": {
-    "userId": "user123",
-    "content": "Remember that John likes pizza"
-  }
-}
+### 2. Start MCP Server
+```bash
+npm run start
 ```
+
+### 3. Use Client SDK
+```javascript
+import { CognifyMCPClient } from '@cognify/mcp-client';
+
+const client = new CognifyMCPClient({
+  authToken: 'your-jwt-token'
+});
+
+await client.connect('node', ['path/to/mcp-server/dist/index.js']);
+```
+
+## Available Tools
+
+### store_context
+- **content** (required): The content to store
+- **metadata** (optional): Additional metadata
+- **authToken** (required): JWT authentication token
+
+### search_context  
+- **query** (required): Search query
+- **limit** (optional): Maximum results (default: 5)
+- **authToken** (required): JWT authentication token
+
+## Scripts
+
+- `npm run dev` - Development mode
+- `npm run build` - Compile TypeScript
+- `npm run start` - Run server
+- `node status.cjs` - Check status
 
 ## Configuration
 
-The server expects the Cognify backend to be running at `http://localhost:3001`. You can modify the API endpoint in `src/tools/index.ts` if needed.
-
-## Project Structure
-
-```
-src/
-├── index.ts           # Main MCP server setup
-└── tools/
-    └── index.ts       # Tool definitions and handlers
-```
-
-## Integration
-
-To integrate this MCP server with an MCP client:
-
-1. Build the project: `npm run build`
-2. Configure your MCP client to use this server
-3. The server communicates via stdio (stdin/stdout)
-
-## Error Handling
-
-The server includes proper error handling for:
-- Network failures when communicating with the backend
-- Invalid tool parameters
-- Unknown tool requests
-
-All errors are returned in MCP-compatible format with appropriate error codes.
+`.env` file:
+- `BACKEND_URL=http://localhost:3001`
