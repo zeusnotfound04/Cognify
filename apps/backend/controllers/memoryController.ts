@@ -1,5 +1,5 @@
 import type { Request  , Response} from "express";
-import { createMemory, searchMemory, getUserMemories } from "../services/memoryService";
+import { createMemory, searchMemory, getUserMemories, createMemoryForUser, searchMemoriesForUser } from "../services/memoryService";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { MCPRequest } from "../middleware/mcpAuth";
 
@@ -24,10 +24,16 @@ export const createMemoryHandler = async (req : AuthenticatedRequest & MCPReques
             return res.status(400).json({ error: "content is required" });
         }
         
-    const result = await createMemory(userId, content , metadata)
-    const io = req.app.get("io");
-    io.emit("memory:created", result);
-    res.json(result)
+        // Use the user-specific function for consistency
+        const result = await createMemoryForUser({
+            content,
+            metadata,
+            userId
+        });
+        
+        const io = req.app.get("io");
+        io.emit("memory:created", result);
+        res.json(result)
 
     } catch(err : any){
         console.error("Error while creating memory" , err)
@@ -37,22 +43,33 @@ export const createMemoryHandler = async (req : AuthenticatedRequest & MCPReques
 
 export const searchMemoryHandler = async (req : AuthenticatedRequest & MCPRequest , res : Response) => {
     try{
-        const { query } = req.body;
+        const { query, limit = 5 } = req.body;
         
         let userId: string;
         
         if (req.fromMCP) {
             userId = req.mcpUserId || 'anonymous';
+            // Use user-specific search for MCP requests
+            const results = await searchMemoriesForUser({
+                query,
+                userId,
+                limit
+            });
+            res.json(results);
         } else {
             const userIdFromAuth = req.user?.id;
             if (!userIdFromAuth) {
                 return res.status(401).json({ error: "User not authenticated" });
             }
             userId = userIdFromAuth;
+            // Use user-specific search for authenticated requests too
+            const results = await searchMemoriesForUser({
+                query,
+                userId,
+                limit
+            });
+            res.json(results);
         }
-        
-        const results = await searchMemory(query);
-        res.json(results)
     } catch(err : any) {
         console.error("Error while searching the memory" , err)
         res.status(500).json({ error : "Failed to search memory"})

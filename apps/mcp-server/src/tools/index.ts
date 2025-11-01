@@ -1,8 +1,8 @@
 import axios from "axios";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { getConfig } from "../config.js";
 
-const BASE_URL = process.env.BACKEND_URL || "http://localhost:3001";
-const SERVICE_TOKEN = process.env.MCP_SERVICE_TOKEN;
+const config = getConfig();
 
 export const memoryStoreTool: Tool = {
   name: "store_context",
@@ -68,7 +68,7 @@ export const storeContextHandler = async ({
 }) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/memory`, 
+      `${config.BACKEND_URL}/memory`, 
       { 
         content, 
         metadata,
@@ -76,7 +76,7 @@ export const storeContextHandler = async ({
       },
       {
         headers: {
-          'Authorization': `Bearer ${SERVICE_TOKEN}`,
+          'Authorization': `Bearer ${config.MCP_SERVICE_TOKEN}`,
           'Content-Type': 'application/json',
           'X-MCP-Service': 'cognify-mcp'
         }
@@ -112,7 +112,7 @@ export const searchContextHandler = async ({
 }) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/memory/search`, 
+      `${config.BACKEND_URL}/memory/search`, 
       { 
         query,
         userId: userId || 'anonymous',
@@ -120,7 +120,7 @@ export const searchContextHandler = async ({
       },
       {
         headers: {
-          'Authorization': `Bearer ${SERVICE_TOKEN}`,
+          'Authorization': `Bearer ${config.MCP_SERVICE_TOKEN}`,
           'Content-Type': 'application/json',
           'X-MCP-Service': 'cognify-mcp'
         }
