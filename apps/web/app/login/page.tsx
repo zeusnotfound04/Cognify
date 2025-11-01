@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import LoginForm from '../../components/LoginForm';
+import LoginFormSimple from '../../components/LoginFormSimple';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -31,5 +31,5 @@ export default function LoginPage() {
     return null; // Will redirect to dashboard
   }
 
-  return <LoginForm />;
+  return <LoginFormSimple />;
 }
