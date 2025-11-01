@@ -5,7 +5,8 @@ import {
   getProfile, 
   updateProfile, 
   updatePassword, 
-  logout 
+  logout,
+  verifyToken 
 } from '../controllers/authController.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -16,6 +17,7 @@ router.post('/register', register);
 router.post('/login', login);
 
 // Protected routes
+router.get('/verify', requireAuth, verifyToken);
 router.get('/profile', requireAuth, getProfile);
 router.put('/profile', requireAuth, updateProfile);
 router.put('/password', requireAuth, updatePassword);
