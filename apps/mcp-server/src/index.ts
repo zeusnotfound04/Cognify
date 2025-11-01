@@ -1,4 +1,12 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
+// Debug: Log environment variables to see if they're loaded
+console.log('Environment Debug:');
+console.log('BACKEND_URL:', process.env.BACKEND_URL);
+console.log('MCP_SERVICE_TOKEN:', process.env.MCP_SERVICE_TOKEN ? '✅ Set' : '❌ Missing');
+console.log('LOG_LEVEL:', process.env.LOG_LEVEL);
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { 
@@ -16,8 +24,6 @@ import {
 import { logger, handleError } from "./logger.js";
 import { runStartupChecks } from "./database.js";
 import { getConfig } from "./config.js";
-
-dotenv.config();
 
 const config = getConfig();
 

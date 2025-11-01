@@ -2,7 +2,15 @@ import axios from "axios";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getConfig } from "../config.js";
 
-const config = getConfig();
+// Lazy load config when needed instead of at module level
+const getConfigSafely = () => {
+  try {
+    return getConfig();
+  } catch (error) {
+    console.error('Config loading failed:', error);
+    throw error;
+  }
+};
 
 export const memoryStoreTool: Tool = {
   name: "store_context",
@@ -67,6 +75,7 @@ export const storeContextHandler = async ({
   userId?: string; 
 }) => {
   try {
+    const config = getConfigSafely();
     const response = await axios.post(
       `${config.BACKEND_URL}/memory`, 
       { 
@@ -111,6 +120,7 @@ export const searchContextHandler = async ({
   limit?: number; 
 }) => {
   try {
+    const config = getConfigSafely();
     const response = await axios.post(
       `${config.BACKEND_URL}/memory/search`, 
       { 
