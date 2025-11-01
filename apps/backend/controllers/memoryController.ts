@@ -1,19 +1,25 @@
 import type { Request  , Response} from "express";
 import { createMemory, searchMemory, getUserMemories } from "../services/memoryService";
 import { AuthenticatedRequest } from "../middleware/auth";
+import { MCPRequest } from "../middleware/mcpAuth";
 
-export const createMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
+export const createMemoryHandler = async (req : AuthenticatedRequest & MCPRequest , res : Response) => {
     try{
         console.log("Request body in createMemoryHandler:", req.body);
         const { content ,  metadata = {} } = req.body;
-        const userId = req.user?.id;
         
-        // Validate authenticated user
-        if (!userId) {
-            return res.status(401).json({ error: "User not authenticated" });
+        let userId: string;
+        
+        if (req.fromMCP) {
+            userId = req.mcpUserId || 'anonymous';
+        } else {
+            const userIdFromAuth = req.user?.id;
+            if (!userIdFromAuth) {
+                return res.status(401).json({ error: "User not authenticated" });
+            }
+            userId = userIdFromAuth;
         }
         
-        // Validate required fields
         if (!content) {
             return res.status(400).json({ error: "content is required" });
         }
@@ -29,13 +35,20 @@ export const createMemoryHandler = async (req : AuthenticatedRequest , res : Res
     }    
 }  
 
-export const searchMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
+export const searchMemoryHandler = async (req : AuthenticatedRequest & MCPRequest , res : Response) => {
     try{
         const { query } = req.body;
-        const userId = req.user?.id;
         
-        if (!userId) {
-            return res.status(401).json({ error: "User not authenticated" });
+        let userId: string;
+        
+        if (req.fromMCP) {
+            userId = req.mcpUserId || 'anonymous';
+        } else {
+            const userIdFromAuth = req.user?.id;
+            if (!userIdFromAuth) {
+                return res.status(401).json({ error: "User not authenticated" });
+            }
+            userId = userIdFromAuth;
         }
         
         const results = await searchMemory(query);
@@ -46,12 +59,18 @@ export const searchMemoryHandler = async (req : AuthenticatedRequest , res : Res
     }      
 }            
 
-export const fetchUserMemoryHandler = async (req : AuthenticatedRequest , res : Response) => {
+export const fetchUserMemoryHandler = async (req : AuthenticatedRequest & MCPRequest , res : Response) => {
     try{
-        const userId = req.user?.id;
+        let userId: string;
         
-        if (!userId) {
-            return res.status(401).json({ error: "User not authenticated" });
+        if (req.fromMCP) {
+            userId = req.mcpUserId || 'anonymous';
+        } else {
+            const userIdFromAuth = req.user?.id;
+            if (!userIdFromAuth) {
+                return res.status(401).json({ error: "User not authenticated" });
+            }
+            userId = userIdFromAuth;
         }
         
         const memories = await getUserMemories(userId);

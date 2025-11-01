@@ -14,7 +14,6 @@ export async function createMemory( userId : string ,content : string , metadata
     const embeddings = await generateEmbedding(content)
     const embeddingString = `[${embeddings.join(',')}]`;
 
-    // Insert with vector embedding and return only the ID
     const result = await prisma.$queryRaw<Array<{ id: string }>>`
         INSERT INTO "Memory" (id, "userId", content, embedding, metadata, "createdAt", "updatedAt")
         VALUES (gen_random_uuid(), ${userId}, ${content}, ${embeddingString}::vector, ${JSON.stringify(metadata ?? {})}::jsonb, NOW(), NOW())
@@ -47,6 +46,14 @@ export async function createMemory( userId : string ,content : string , metadata
     return memory;
 }
 
+export async function createMemoryForUser(data: {
+    content: string;
+    metadata?: any;
+    userId: string;
+}) {
+    return await createMemory(data.userId, data.content, data.metadata);
+}
+
 export async function searchMemory(query: string, limit: number = 5) {
     const queryEmbedding = await generateEmbedding(query);
     
@@ -64,6 +71,36 @@ export async function searchMemory(query: string, limit: number = 5) {
             metadata,
             1 - (embedding <=> ${queryEmbeddingString}::vector) as similarity
         FROM "Memory"
+        ORDER BY embedding <=> ${queryEmbeddingString}::vector
+        LIMIT ${limit}
+    `;
+
+    return memories;
+}
+
+export async function searchMemoriesForUser(data: {
+    query: string;
+    userId: string;
+    limit?: number;
+}) {
+    const queryEmbedding = await generateEmbedding(data.query);
+    
+    const queryEmbeddingString = `[${queryEmbedding.join(',')}]`;
+    const limit = data.limit || 5;
+
+    const memories = await prisma.$queryRaw<Array<{
+        id: string;
+        content: string;
+        metadata: any;
+        similarity: number;
+    }>>`
+        SELECT 
+            id,
+            content,
+            metadata,
+            1 - (embedding <=> ${queryEmbeddingString}::vector) as similarity
+        FROM "Memory"
+        WHERE "userId" = ${data.userId}
         ORDER BY embedding <=> ${queryEmbeddingString}::vector
         LIMIT ${limit}
     `;
