@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Debug: Log environment variables to see if they're loaded
 console.log('Environment Debug:');
 console.log('BACKEND_URL:', process.env.BACKEND_URL);
 console.log('MCP_SERVICE_TOKEN:', process.env.MCP_SERVICE_TOKEN ? '✅ Set' : '❌ Missing');
