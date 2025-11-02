@@ -16,7 +16,8 @@ import {
   Clock,
   Sparkles,
   Menu,
-  X
+  X,
+  Key
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -399,6 +400,20 @@ const Dashboard: React.FC = () => {
                             <span className="text-foreground font-semibold">Today</span>
                           </div>
                         </div>
+                      </div>
+                      
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl">
+                        <h3 className="text-lg font-semibold text-foreground mb-2">MCP API Access</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Configure Cognify in your IDE with your personal API key
+                        </p>
+                        <a 
+                          href="/dashboard/api-keys"
+                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Key className="w-4 h-4 mr-2" />
+                          View API Key
+                        </a>
                       </div>
                     </div>
                   </div>

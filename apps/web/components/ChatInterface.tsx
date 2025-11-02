@@ -49,6 +49,7 @@ export default function ChatInterface() {
   const [useMemoryContext, setUseMemoryContext] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Queries
   const { data: chatHistory = [], isLoading: historyLoading } = useChatHistory();
@@ -58,10 +59,24 @@ export default function ChatInterface() {
   const sendMessageMutation = useSendMessage();
   const clearHistoryMutation = useClearChatHistory();
 
+  // Auto-resize textarea
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`; // Max height of 200px
+    }
+  };
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
+
+  // Adjust textarea height when message changes
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
 
   // Handle sending message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -334,21 +349,24 @@ export default function ChatInterface() {
             <form onSubmit={handleSendMessage} className="space-y-4">
               <div className="flex gap-2">
                 <Textarea
+                  ref={textareaRef}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Ask me anything..."
-                  className="min-h-[60px] resize-none"
+                  className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto leading-5"
+                  style={{ height: 'auto' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage(e);
                     }
                   }}
+                  onInput={adjustTextareaHeight}
                 />
                 <Button 
                   type="submit" 
                   disabled={!message.trim() || sendMessageMutation.isPending}
-                  className="self-end"
+                  className="self-end px-4 py-2 h-auto min-h-[44px]"
                 >
                   {sendMessageMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
