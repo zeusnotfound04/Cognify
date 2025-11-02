@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
+import GoogleOAuthManager from '@/components/GoogleOAuthManager'
+import DataSyncManager from '@/components/DataSyncManager'
+import ImportContextButton from '@/components/ImportContextButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { 
   Slack, 
@@ -15,8 +18,13 @@ import {
   CheckCircle,
   AlertCircle,
   ExternalLink,
-  Unlink
+  Unlink,
+  ArrowLeft,
+  Brain,
+  MessageSquare,
+  Plug
 } from 'lucide-react'
+import Link from 'next/link'
 
 interface Integration {
   id: string
@@ -200,6 +208,37 @@ export default function IntegrationsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Navigation Header */}
+      <div className="mb-6">
+        <nav className="flex items-center justify-between">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          
+          <div className="flex items-center space-x-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm">
+                <Brain className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/chat">
+              <Button variant="ghost" size="sm">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Chat
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" className="bg-muted">
+              <Plug className="h-4 w-4 mr-2" />
+              Integrations
+            </Button>
+          </div>
+        </nav>
+      </div>
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Integrations</h1>
         <p className="text-muted-foreground">
@@ -217,6 +256,36 @@ export default function IntegrationsPage() {
           <AlertDescription>{message.text}</AlertDescription>
         </Alert>
       )}
+
+      {/* Google OAuth Integration Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Google Services Integration</CardTitle>
+          <CardDescription>
+            Connect your Google account to access Drive files and Calendar events with comprehensive permissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <GoogleOAuthManager />
+            <ImportContextButton />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-8" />
+
+      {/* Data Sync Management Section */}
+      <DataSyncManager />
+
+      <Separator className="my-8" />
+
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold mb-2">Other Integrations</h2>
+        <p className="text-muted-foreground text-sm">
+          Additional services and tools to expand Cognify's capabilities.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {integrationConfigs.map((config) => {
