@@ -8,6 +8,8 @@ import { callLLM, generateEmbedding } from "./services/embeddingService";
 import { findSimilarMemories } from "./services/memoryService";
 import authRoutes from "./routes/auth";
 import oauthRoutes from "./routes/oauth";
+import syncRoutes from "./routes/sync";
+import apiKeyRoutes from "./routes/apiKeys";
 import { requireAuth, optionalAuth, AuthenticatedRequest } from "./middleware/auth";
 import { validateMCPService } from "./middleware/mcpAuth";
 import dotenv from "dotenv";
@@ -40,6 +42,12 @@ app.use('/auth', authRoutes);
 
 // OAuth and integration routes
 app.use('/', oauthRoutes);
+
+// Data sync routes
+app.use('/sync', syncRoutes);
+
+// API key management routes
+app.use('/api-keys', apiKeyRoutes);
 
 app.get("/users", requireAuth, async (req, res) => {
     try {

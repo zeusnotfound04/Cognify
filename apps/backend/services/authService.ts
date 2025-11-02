@@ -1,9 +1,17 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../db/prisma.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
+
+// Generate a secure MCP API key
+function generateMcpApiKey(): string {
+  const randomBytes = crypto.randomBytes(32);
+  const apiKey = randomBytes.toString('hex');
+  return `mcp_${apiKey}`;
+}
 
 export interface AuthUser {
   id: string;
@@ -84,13 +92,17 @@ export async function registerUser(credentials: RegisterCredentials): Promise<Au
   // Hash password
   const hashedPassword = await hashPassword(password);
 
-  // Create user
+  // Generate MCP API key for the user
+  const mcpApiKey = generateMcpApiKey();
+
+  // Create user with MCP API key
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
       name,
       username,
+      mcpApiKey,
     },
     select: {
       id: true,
@@ -202,4 +214,27 @@ export async function changePassword(userId: string, currentPassword: string, ne
     where: { id: userId },
     data: { password: hashedNewPassword },
   });
+}
+
+export async function getUserMcpApiKey(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { mcpApiKey: true }
+  });
+  console.log("fetched MCP API key for user:", user?.mcpApiKey);
+  return user?.mcpApiKey || null;
+}
+
+export async function authenticateByMcpApiKey(apiKey: string): Promise<AuthUser | null> {
+  const user = await prisma.user.findFirst({
+    where: { mcpApiKey: apiKey },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      username: true,
+    }
+  });
+
+  return user;
 }

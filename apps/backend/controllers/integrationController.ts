@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import prisma from '../db/prisma';
 
 // Get all integrations for a user
-export const getIntegrations = async (req: Request, res: Response) => {
+export const getIntegrations = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -31,7 +32,7 @@ export const getIntegrations = async (req: Request, res: Response) => {
 };
 
 // Create or update an integration
-export const createIntegration = async (req: Request, res: Response) => {
+export const createIntegration = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -105,7 +106,7 @@ export const createIntegration = async (req: Request, res: Response) => {
 };
 
 // Delete an integration
-export const deleteIntegration = async (req: Request, res: Response) => {
+export const deleteIntegration = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -139,7 +140,7 @@ export const deleteIntegration = async (req: Request, res: Response) => {
 };
 
 // Get a specific integration with tokens (for API calls)
-export const getIntegrationTokens = async (req: Request, res: Response) => {
+export const getIntegrationTokens = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -178,7 +179,7 @@ export const getIntegrationTokens = async (req: Request, res: Response) => {
 };
 
 // Refresh an expired token (for Google APIs)
-export const refreshIntegrationToken = async (req: Request, res: Response) => {
+export const refreshIntegrationToken = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {

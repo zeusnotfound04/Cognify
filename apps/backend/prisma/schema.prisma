@@ -22,8 +22,10 @@ model User {
   password     String
   name         String?
   username     String?       @unique  
+  mcpApiKey    String?       // User's single MCP API key for IDE integration
   memories     Memory[]
   integrations Integration[]
+  apiKeys      ApiKey[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -63,6 +65,22 @@ model Integration {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider])
+}
+
+model ApiKey {
+  id          String   @id @default(uuid())
+  userId      String
+  provider    String   // 'slack', 'notion', 'google'
+  keyType     String   // 'client_id', 'client_secret', 'verification_token'
+  keyValue    String   // Encrypted value
+  description String?  // User-friendly description
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, keyType])
 }
 
 model AgentTrigger {
