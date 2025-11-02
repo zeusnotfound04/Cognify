@@ -33,6 +33,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
 });
 
+import AnimatedLayout from "@/components/AnimatedLayout";
+
 export const metadata: Metadata = {
   title: "Cognify - Personal Memory Assistant",
   description: "Your intelligent personal memory assistant powered by AI",
@@ -54,7 +56,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              {children}
+              <AnimatedLayout>{children}</AnimatedLayout>
               <Toaster />
             </AuthProvider>
           </QueryProvider>

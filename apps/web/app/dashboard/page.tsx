@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import MemoryInterface from '../../components/MemoryInterface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, LogOut, Brain, User, MessageSquare } from 'lucide-react';
+import { Loader2, LogOut, Brain, User, MessageSquare, Settings, Plug, Key } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -54,6 +54,33 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <nav className="hidden md:flex items-center space-x-4">
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <Brain className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link href="/chat">
+                  <Button variant="ghost" size="sm">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Chat
+                  </Button>
+                </Link>
+                <Link href="/dashboard/integrations">
+                  <Button variant="ghost" size="sm">
+                    <Plug className="h-4 w-4 mr-2" />
+                    Integrations
+                  </Button>
+                </Link>
+                <Link href="/dashboard/api-keys">
+                  <Button variant="ghost" size="sm">
+                    <Key className="h-4 w-4 mr-2" />
+                    API Key
+                  </Button>
+                </Link>
+              </nav>
+              
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
                 <span className="text-sm">{user?.email}</span>
@@ -83,6 +110,12 @@ export default function DashboardPage() {
                   <Button>
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Start Chat
+                  </Button>
+                </Link>
+                <Link href="/dashboard/integrations">
+                  <Button variant="outline">
+                    <Plug className="h-4 w-4 mr-2" />
+                    Integrations
                   </Button>
                 </Link>
                 <Button variant="outline">
