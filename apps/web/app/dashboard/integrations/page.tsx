@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   Brain,
   MessageSquare,
-  Plug
+  Plug,
+  Settings
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -37,19 +38,6 @@ interface Integration {
 }
 
 const integrationConfigs = [
-  {
-    key: 'slack',
-    name: 'Slack',
-    description: 'Connect your Slack workspace to access messages, channels, and team data',
-    icon: Slack,
-    color: 'bg-purple-500',
-    benefits: [
-      'Access channel messages and history',
-      'Search across your workspace',
-      'Get team member information',
-      'Analyze communication patterns'
-    ]
-  },
   {
     key: 'notion',
     name: 'Notion',
@@ -149,7 +137,23 @@ export default function IntegrationsPage() {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to initiate OAuth')
+        const errorData = await response.json()
+        console.error('OAuth initiation failed:', errorData)
+        
+        // Handle specific errors
+        if (errorData.error?.includes('No API keys configured')) {
+          setMessage({ 
+            type: 'error', 
+            text: `Please configure your ${provider} API keys first. Go to OAuth Keys to set up your credentials.` 
+          })
+        } else {
+          setMessage({ 
+            type: 'error', 
+            text: errorData.error || 'Failed to start connection process' 
+          })
+        }
+        setConnecting(null)
+        return
       }
       
       const data = await response.json()
@@ -253,7 +257,19 @@ export default function IntegrationsPage() {
           ) : (
             <CheckCircle className="h-4 w-4" />
           )}
-          <AlertDescription>{message.text}</AlertDescription>
+          <AlertDescription>
+            {message.text}
+            {message.type === 'error' && message.text.includes('API keys') && (
+              <div className="mt-2">
+                <Link href="/dashboard/oauth-keys">
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configure OAuth Keys
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -277,6 +293,39 @@ export default function IntegrationsPage() {
 
       {/* Data Sync Management Section */}
       <DataSyncManager />
+
+      <Separator className="my-8" />
+
+      {/* OAuth Configuration Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            OAuth Configuration
+          </CardTitle>
+          <CardDescription>
+            Configure your OAuth API keys for third-party integrations before connecting.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Set up your OAuth credentials (Client ID and Client Secret) for Google, Slack, and Notion integrations.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                These are required before you can connect any integrations.
+              </p>
+            </div>
+            <Link href="/dashboard/oauth-keys">
+              <Button>
+                <Settings className="h-4 w-4 mr-2" />
+                Configure OAuth Keys
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       <Separator className="my-8" />
 
@@ -383,44 +432,7 @@ export default function IntegrationsPage() {
         })}
       </div>
 
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Privacy & Security</CardTitle>
-          <CardDescription>
-            Your data security and privacy are our top priorities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-2">How we protect your data:</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• End-to-end encryption for all data transfers</li>
-                <li>• Secure token storage with industry standards</li>
-                <li>• Minimal scope permissions requested</li>
-                <li>• Regular security audits and monitoring</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Your control:</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Disconnect integrations at any time</li>
-                <li>• Data is immediately deleted upon disconnection</li>
-                <li>• Full transparency in our privacy policy</li>
-                <li>• No data sharing with third parties</li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t">
-            <Button variant="link" size="sm" asChild>
-              <a href="/privacy" target="_blank">
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Read our Privacy Policy
-              </a>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+     
     </div>
   )
 }

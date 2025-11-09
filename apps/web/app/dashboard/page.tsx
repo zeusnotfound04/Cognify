@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import MemoryInterface from '../../components/MemoryInterface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, LogOut, Brain, User, MessageSquare, Settings, Plug, Key } from 'lucide-react';
+import { Loader2, LogOut, Brain, User, MessageSquare, Settings, Plug, Key, Network } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -67,6 +67,12 @@ export default function DashboardPage() {
                     Chat
                   </Button>
                 </Link>
+                <Link href="/memories">
+                  <Button variant="ghost" size="sm">
+                    <Network className="h-4 w-4 mr-2" />
+                    Memory Network
+                  </Button>
+                </Link>
                 <Link href="/dashboard/integrations">
                   <Button variant="ghost" size="sm">
                     <Plug className="h-4 w-4 mr-2" />
@@ -112,16 +118,18 @@ export default function DashboardPage() {
                     Start Chat
                   </Button>
                 </Link>
+                <Link href="/memories">
+                  <Button variant="outline">
+                    <Network className="h-4 w-4 mr-2" />
+                    Memory Network
+                  </Button>
+                </Link>
                 <Link href="/dashboard/integrations">
                   <Button variant="outline">
                     <Plug className="h-4 w-4 mr-2" />
                     Integrations
                   </Button>
                 </Link>
-                <Button variant="outline">
-                  <Brain className="h-4 w-4 mr-2" />
-                  Explore Memories
-                </Button>
               </div>
             </CardContent>
           </Card>

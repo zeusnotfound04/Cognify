@@ -1,12 +1,13 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ReactNode } from 'react';
 
-export default function Layout(){
-
-    return(
-                <SidebarProvider defaultOpen={!isCollapsed}>
-          <AppSidebar user={session?.user} />
-          <SidebarInset>{children}</SidebarInset>
-        </SidebarProvider>
-    )
+export default function ChatLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <div className="h-screen w-full">
+      {children}
+    </div>
+  );
 }

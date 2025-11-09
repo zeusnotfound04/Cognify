@@ -33,7 +33,7 @@ export const initiateOAuth = async (req: AuthenticatedRequest, res: Response) =>
     const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
     console.log(`Generated state parameter for ${provider}: ${state.substring(0, 20)}...`);
     
-    const authUrl = getAuthUrl(provider as any, userId, state);
+    const authUrl = await getAuthUrl(provider as any, userId, state);
     console.log(`Generated auth URL for ${provider}: ${authUrl.substring(0, 100)}...`);
     
     res.json({ authUrl });
